@@ -59,3 +59,19 @@ q2 = agg_df2.writeStream \
 .option("checkpointLocation","checkpoints") \
 .start()
 
+
+allfiles = spark.read.option("header","false").csv("data/output_SA0297/part-*.csv") # Output as CSV file
+allfiles \
+.coalesce(1) \
+.write.format("csv") \
+.option("header", "false") \
+.save("final_output_SA0297/single_csv_file/")
+
+
+allfiles = spark.read.option("header","false").csv("data/output_PC6771/part-*.csv") # Output as CSV file
+allfiles \
+.coalesce(1) \
+.write.format("csv") \
+.option("header", "false") \
+.save("final_output_PC6771/single_csv_file/")
+
