@@ -27,7 +27,7 @@ for i in range (0, math.floor(min(SA0297_df.shape[0], PC6771_df.shape[0])/500)):
 from pyspark.sql.types import StructType
 
 myschema = StructType() \
-.add("time", "string").add("pid", "string") \
+.add("time", "long").add("pid", "string") \
 .add("x", "float").add("y", "float").add("z", "float")
 
 
