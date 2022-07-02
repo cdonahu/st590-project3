@@ -10,31 +10,56 @@ PC6771_df = all_accs.loc[all_accs.pid=='PC6771']
 
 position = 0
 step=500
-for i in range (0, math.floor(min(SA0297_df.shape[0], PC6771_df.shape[0])/500)):
+
+print ('max number of interations ' + str (math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/500)))
+
+#for i in range (0, math.floor(min(SA0297_df.shape[0], PC6771_df.shape[0])/500)):
+for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/500)):
     
     print ("Position " + str(position))
     print ("Step " + str(step))
     
-    output_SA0297 = SA0297_df.iloc[position:step+position]
-    output_PC6771 = PC6771_df.iloc[position:step+position]
+    if step+position > SA0297_df.shape[0]:
+        if position < SA0297_df.shape[0]:
+            output_SA0297 = SA0297_df.iloc[position:SA0297_df.shape[0]]
+    else:
+        output_SA0297 = SA0297_df.iloc[position:step+position]
+        
+        
+    if step+position > PC6771_df.shape[0]:
+        if position < PC6771_df.shape[0]:
+            output_PC6771 = PC6771_df.iloc[position:PC6771_df.shape[0]]
+    else:
+        output_PC6771 = PC6771_df.iloc[position:step+position]
     
-    output_SA0297.to_csv("sa0297files/sa0927_" + str(i) + ".csv", index = False, header = False)
-    output_PC6771.to_csv("pc6771files/pc6771_" + str(i) + ".csv", index = False, header = False)
+    
+    if not output_SA0297.empty:
+        output_SA0297.to_csv("sa0297_csv_files/sa0927_" + str(i) + ".csv", index = False, header = False)
+        
+    if not output_PC6771.empty:  
+        output_PC6771.to_csv("pc6771_csv_files/pc6771_" + str(i) + ".csv", index = False, header = False)
     time.sleep(25)
     position = position+step
+    
+    output_PC6771 = pd.DataFrame ()
+    output_SA0297 = pd.DataFrame ()
+    
     
     
 from pyspark.sql.types import StructType
 
 myschema = StructType() \
-.add("time", "long").add("pid", "string") \
-.add("x", "float").add("y", "float").add("z", "float")
+.add("time", "long") \
+.add("pid", "string") \
+.add("x", "float") \
+.add("y", "float") \
+.add("z", "float")
 
 
 df1 = spark \
 .readStream \
 .schema(myschema) \
-.csv("sa0297files/")  
+.csv("sa0297_csv_files/")  
 
 agg_df1 = df1.select('time', 'pid', (pow( (df1['x']*df1['x'] + df1['y']*df1['y'] + df1['z']*df1['z']), 0.5)))
 q1 = agg_df1.writeStream \
@@ -47,16 +72,16 @@ q1 = agg_df1.writeStream \
 
 df2 = spark \
 .readStream \
-.schema(myschema)
-.csv("pc6771files/") 
+.schema(myschema) \
+.csv("pc6771_csv_files/") 
 
-agg_df2 = df2.select('time', 'pid', (pow( (df1['x']*df1['x'] + df1['y']*df1['y'] + df1['z']*df1['z']), 0.5)))
+agg_df2 = df2.select('time', 'pid', (pow( (df2['x']*df2['x'] + df2['y']*df2['y'] + df2['z']*df2['z']), 0.5)))
 
 q2 = agg_df2.writeStream \
 .outputMode("append") \
 .format("csv") \
 .option("path", "data/output_PC6771/") \
-.option("checkpointLocation","checkpoints") \
+.option("checkpointLocation","checkpoints_2") \
 .start()
 
 
