@@ -9,7 +9,7 @@ import math
 import time
 
 #######################################################
-# Set up for Creating Files
+# Set up for creating Files
 #######################################################
 # Read all_accelerometer data from .csv file and store it to data frame
 all_accs = pd.read_csv("data/all_accelerometer_data_pids_13.csv")
@@ -20,10 +20,15 @@ PC6771_df = all_accs.loc[all_accs.pid=='PC6771']
 
 # Set up loop to write 500 values at a time for both pids
 # Start from the first raw with step size = 500 raws
+# Define starting position=0 and step=500 rows 
 position = 0
 step=500
-for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/500)):
-    
+
+# Loop will be able to read all available data for both PIDs
+# Number of iterations defined as smallest integer greater than or equal to max number of 
+# rows for both PIDs divided by the step size
+for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/step)):
+ 
     if step+position > SA0297_df.shape[0]:
         if position < SA0297_df.shape[0]:
             output_SA0297 = SA0297_df.iloc[position:SA0297_df.shape[0]]
