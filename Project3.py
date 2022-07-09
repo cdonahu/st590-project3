@@ -18,38 +18,45 @@ all_accs = pd.read_csv("data/all_accelerometer_data_pids_13.csv")
 SA0297_df = all_accs.loc[all_accs.pid=='SA0297']
 PC6771_df = all_accs.loc[all_accs.pid=='PC6771']
 
-# Set up loop to write 500 values at a time for both pids
+# Set up loop to write 500 values at a time for both PIDs
 # Start from the first raw with step size = 500 raws
 # Define starting position=0 and step=500 rows 
 position = 0
 step=500
 
-# Loop will be able to read all available data for both PIDs
+# Loop will read all available data for both PIDs
 # Number of iterations defined as smallest integer greater than or equal to max number of 
 # rows for both PIDs divided by the step size
 for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/step)):
  
+    # Check if there are rows available to read for SA0297
     if step+position > SA0297_df.shape[0]:
         if position < SA0297_df.shape[0]:
             output_SA0297 = SA0297_df.iloc[position:SA0297_df.shape[0]]
     else:
         output_SA0297 = SA0297_df.iloc[position:step+position]
-        
+    
+    # Check if there are rows available to read for PC6771
     if step+position > PC6771_df.shape[0]:
         if position < PC6771_df.shape[0]:
             output_PC6771 = PC6771_df.iloc[position:PC6771_df.shape[0]]
     else:
         output_PC6771 = PC6771_df.iloc[position:step+position]
     
+    # Output to csv only if there is data in data frame for each PID
     if not output_SA0297.empty:
         output_SA0297.to_csv("sa0297_csv_files/sa0927_" + str(i) + ".csv", index = False, header = False)
         
     if not output_PC6771.empty:  
         output_PC6771.to_csv("pc6771_csv_files/pc6771_" + str(i) + ".csv", index = False, header = False)
         
+    # Set up delay between outputs    
     time.sleep(20)
+    
+    # Update starting point for next reading
     position = position+step
     
+    # Clean up data data frames before next iteration
     output_PC6771 = pd.DataFrame ()
     output_SA0297 = pd.DataFrame ()
     
@@ -60,7 +67,7 @@ for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/step)):
 from pyspark.sql.types import StructType
 
 # Set up schema for input stream
-# This schema will be used for both by input stream for pid=SA0297 and for pid=PC6771
+# This schema will be used by both input streams for pid=SA0297 and for pid=PC6771
 myschema = StructType() \
 .add("time", "long") \
 .add("pid", "string") \
@@ -95,6 +102,7 @@ agg_df2 = df2.select('time', 'pid', (pow( (df2['x']*df2['x'] + df2['y']*df2['y']
 #######################################################
 
 # Write each stream out to their own csv files
+# Write stream for PID=SA0297
 q1 = agg_df1.writeStream \
 .outputMode("append") \
 .format("csv") \
@@ -102,6 +110,7 @@ q1 = agg_df1.writeStream \
 .option("checkpointLocation","checkpoints") \
 .start()
 
+# Write stream for PID=PC6771
 q2 = agg_df2.writeStream \
 .outputMode("append") \
 .format("csv") \
