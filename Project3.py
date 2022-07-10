@@ -20,7 +20,7 @@ PC6771_df = all_accs.loc[all_accs.pid=='PC6771']
 
 # Set up loop to write 500 values at a time for both PIDs
 # Start from the first raw with step size = 500 raws
-# Define starting position=0 and step=500 rows 
+# Define starting position=0 and step size step=500 rows 
 position = 0
 step=500
 
@@ -135,12 +135,15 @@ allfiles_pc = spark \
 #######################################################
 # Output to single CSV file
 #######################################################
+
+# Single output for PID=SA0297 into dedicated directory final_output_SA0297/single_csv_file/
 allfiles_sa \
 .coalesce(1) \
 .write.format("csv") \
 .option("header", "false") \
 .save("final_output_SA0297/single_csv_file/")
 
+# Single output for PID=PC6771 into dedicated directory final_output_PC6771/single_csv_file
 allfiles_pc \
 .coalesce(1) \
 .write.format("csv") \
