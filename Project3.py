@@ -2,6 +2,10 @@
 # ST - 590
 # Project 3
 # Performed by Claudia Donahue and Nataliya Peshekhodko
+#
+# In this project, we will use pyspark to monitor a
+# folder, read in data that arrives, transform the data,
+# and write the results out to a file. 
 #######################################################
 
 import pandas as pd
@@ -9,11 +13,17 @@ import math
 import time
 
 #######################################################
-# Set up for creating Files
+# Set up for creating Files: 
+# We are using data from a study that tried to detect
+# heavy drinking during a "bar crawl" based partly on 
+# readings from cell phone accelerometer data.
 #######################################################
+# The data was dowloaded from https://archive.ics.uci.edu/ml/datasets/Bar+Crawl%3A+Detecting+Heavy+Drinking
+
 # Read all_accelerometer data from .csv file and store it to data frame
 all_accs = pd.read_csv("data/all_accelerometer_data_pids_13.csv")
 
+# We are just looking at two individuals, SA0297 and PC6771. 
 # Create two separate data frames for pid=SA0297 and pid=PC677
 SA0297_df = all_accs.loc[all_accs.pid=='SA0297']
 PC6771_df = all_accs.loc[all_accs.pid=='PC6771']
@@ -50,7 +60,7 @@ for i in range (0, math.ceil(max(SA0297_df.shape[0], PC6771_df.shape[0])/step)):
     if not output_PC6771.empty:  
         output_PC6771.to_csv("pc6771_csv_files/pc6771_" + str(i) + ".csv", index = False, header = False)
         
-    # Set up delay between outputs    
+    # Set up 20-second time delay between outputs    
     time.sleep(20)
     
     # Update starting point for next reading
@@ -96,6 +106,7 @@ agg_df1 = df1.select('time', 'pid', (pow( (df1['x']*df1['x'] + df1['y']*df1['y']
 
 agg_df2 = df2.select('time', 'pid', (pow( (df2['x']*df2['x'] + df2['y']*df2['y'] + df2['z']*df2['z']), 0.5)))
 
+# We just want to keep the columns for Time, PID, and magnitude
 
 #######################################################
 # Writing the Streams
